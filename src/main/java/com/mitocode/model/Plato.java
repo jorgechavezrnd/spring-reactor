@@ -1,5 +1,9 @@
 package com.mitocode.model;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -10,12 +14,16 @@ public class Plato {
 	@Id
 	private String id;
 	
+	@Size(min = 3)
 	@Field(name = "nombre")
 	private String nombre;
 	
+	@NotNull
+	@Min(1)
 	@Field(name = "precio")
 	private Double precio;
 	
+	@NotNull
 	@Field(name = "estado")
 	private Boolean estado;
 	
