@@ -1,5 +1,10 @@
 package com.mitocode.service.impl;
 
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Pageable;
+
+import com.mitocode.pagination.PageSupport;
 import com.mitocode.repo.IGenericRepo;
 import com.mitocode.service.ICRUD;
 
@@ -33,6 +38,21 @@ public abstract class CRUDImpl<T, ID> implements ICRUD<T, ID> {
 	@Override
 	public Mono<Void> eliminar(ID id) {
 		return getRepo().deleteById(id);
+	}
+	
+	@Override
+	public Mono<PageSupport<T>> listarPage(Pageable page) {
+		return getRepo().findAll()
+				.collectList()
+				.map(list -> new PageSupport<>(
+						list
+						.stream()
+						.skip(page.getPageNumber() * page.getPageSize())
+						.limit(page.getPageSize())
+						.collect(Collectors.toList()),
+						page.getPageNumber(), page.getPageSize(), list.size()
+						)
+				);
 	}
 
 }

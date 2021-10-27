@@ -5,6 +5,8 @@ import java.net.URI;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Links;
@@ -19,9 +21,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.mitocode.model.Plato;
+import com.mitocode.pagination.PageSupport;
 import com.mitocode.service.IPlatoService;
 
 import reactor.core.publisher.Flux;
@@ -131,6 +135,22 @@ public class PlatoController {
 				.zipWith(link2)
 				.map(function((izq, der) -> Links.of(izq, der)))
 				.zipWith(service.listarPorId(id), (lk, p) -> EntityModel.of(p, lk));
+	}
+	
+	@GetMapping("/pageable")
+	public Mono<ResponseEntity<PageSupport<Plato>>> listarPageable(
+			@RequestParam(name = "page", defaultValue = "0") int page,
+			@RequestParam(name = "size", defaultValue = "5") int size
+			) {
+		Pageable pageRequest = PageRequest.of(page, size);
+		
+		return service.listarPage(pageRequest)
+				.map(pag -> ResponseEntity
+						.ok()
+						.contentType(MediaType.APPLICATION_JSON)
+						.body(pag)
+						)
+				.defaultIfEmpty(ResponseEntity.noContent().build());
 	}
 	
 }
