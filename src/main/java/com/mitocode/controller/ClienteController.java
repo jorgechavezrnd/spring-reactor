@@ -1,9 +1,14 @@
 package com.mitocode.controller;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.util.Map;
 
 import javax.validation.Valid;
 
+import org.cloudinary.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
@@ -11,6 +16,7 @@ import org.springframework.hateoas.Links;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +25,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.mitocode.model.Cliente;
 import com.mitocode.service.IClienteService;
 
@@ -132,6 +141,66 @@ public class ClienteController {
 						.zipWith(link2)
 						.map(function((izq, der) -> Links.of(izq, der)))
 						.zipWith(service.listarPorId(id), (lk, c) -> EntityModel.of(c, lk));
+	}
+	
+	@PostMapping("/v1/subir/{id}")
+	public Mono<ResponseEntity<Cliente>> subirV1(@PathVariable("id") String id, @RequestPart FilePart file) throws IOException {
+		Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+				"cloud_name", "dtczfrs87",
+				"api_key", "925323884868951",
+				"api_secret", "fZvCroSFSBNpfGYzpXxEc6gEML0"));
+		
+		File f = Files.createTempFile("temp", file.filename()).toFile();
+		
+		return file.transferTo(f)
+				.then(service.listarPorId(id)
+						.flatMap(c -> {
+							Map response;
+
+							try {
+								response = cloudinary.uploader().upload(f, ObjectUtils.asMap("resource_type", "auto"));
+								
+								JSONObject json = new JSONObject(response);
+								String url = json.getString("url");
+								
+								c.setUrlFoto(url);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							
+							return service.modificar(c).thenReturn(ResponseEntity.ok().body(c));
+						})
+						.defaultIfEmpty(ResponseEntity.notFound().build())
+					);
+	}
+	
+	@PostMapping("/v2/subir/{id}")
+	public Mono<ResponseEntity<Cliente>> subirV2(@PathVariable("id") String id, @RequestPart FilePart file) throws IOException {
+		Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+				"cloud_name", "dtczfrs87",
+				"api_key", "925323884868951",
+				"api_secret", "fZvCroSFSBNpfGYzpXxEc6gEML0"));
+		
+		return service.listarPorId(id)
+				.flatMap(c -> {
+					try {
+						File f = Files.createTempFile("temp", file.filename()).toFile();
+						file.transferTo(f).block();
+						
+						Map response = cloudinary.uploader().upload(f, ObjectUtils.asMap("resource_type", "auto"));
+						
+						JSONObject json = new JSONObject(response);
+						String url = json.getString("url");
+						
+						c.setUrlFoto(url);
+
+						return service.modificar(c).thenReturn(ResponseEntity.ok().body(c));
+					} catch (Exception e) {
+					}
+
+					return Mono.just(ResponseEntity.ok().body(c));
+				})
+				.defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 	
 }
