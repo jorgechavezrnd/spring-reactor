@@ -9,8 +9,8 @@ import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-import com.mitocode.model.Plato;
-import com.mitocode.service.IPlatoService;
+import com.mitocode.model.Factura;
+import com.mitocode.service.IFacturaService;
 import com.mitocode.validators.RequestValidator;
 
 import reactor.core.publisher.Mono;
@@ -18,10 +18,10 @@ import reactor.core.publisher.Mono;
 import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 
 @Component
-public class PlatoHandler {
+public class FacturaHandler {
 
 	@Autowired
-	private IPlatoService service;
+	private IFacturaService service;
 	
 	@Autowired
 	private Validator validador;
@@ -33,27 +33,27 @@ public class PlatoHandler {
 		return ServerResponse
 				.ok()
 				.contentType(MediaType.APPLICATION_JSON)
-				.body(service.listar(), Plato.class);
+				.body(service.listar(), Factura.class);
 	}
 	
 	public Mono<ServerResponse> listarPorId(ServerRequest req) {
 		String id = req.pathVariable("id");
 		
 		return service.listarPorId(id)
-				.flatMap(p -> ServerResponse
+				.flatMap(f -> ServerResponse
 							.ok()
 							.contentType(MediaType.APPLICATION_JSON)
-							.body(fromValue(p))
+							.body(fromValue(f))
 				)
 				.switchIfEmpty(ServerResponse.notFound().build());
 	}
 	
 	public Mono<ServerResponse> registrar(ServerRequest req) {
-		Mono<Plato> monoPlato = req.bodyToMono(Plato.class);
+		Mono<Factura> monoCliente = req.bodyToMono(Factura.class);
 		
 		/*return monoPlato
 				.flatMap(p -> {
-					Errors errores = new BeanPropertyBindingResult(p, Plato.class.getName());
+					Errors errores = new BeanPropertyBindingResult(p, Factura.class.getName());
 					validador.validate(p, errores);
 					
 					if (errores.hasErrors()) {
@@ -76,32 +76,34 @@ public class PlatoHandler {
 					}
 				});*/
 		
-		return monoPlato
+		return monoCliente
 				.flatMap(validadorGeneral::validate)
 				.flatMap(service::registrar)
-				.flatMap(p -> ServerResponse.created(URI.create(req.uri().toString().concat(p.getId())))
+				.flatMap(f -> ServerResponse.created(URI.create(req.uri().toString().concat(f.getId())))
 						.contentType(MediaType.APPLICATION_JSON)
-						.body(fromValue(p))
+						.body(fromValue(f))
 				);
 	}
 	
 	public Mono<ServerResponse> modificar(ServerRequest req) {
-		Mono<Plato> monoPlato = req.bodyToMono(Plato.class);
-		Mono<Plato> monoBD = service.listarPorId(req.pathVariable("id"));
+		Mono<Factura> monoCliente = req.bodyToMono(Factura.class);
+		Mono<Factura> monoBD = service.listarPorId(req.pathVariable("id"));
 		
 		return monoBD
-				.zipWith(monoPlato, (bd, p) -> {
-					bd.setId(p.getId());
-					bd.setNombre(p.getNombre());
-					bd.setEstado(p.getEstado());
+				.zipWith(monoCliente, (bd, f) -> {
+					bd.setId(req.pathVariable("id"));
+					bd.setCliente(f.getCliente());
+					bd.setDescripcion(f.getDescripcion());
+					bd.setObservacion(f.getObservacion());
+					bd.setItems(f.getItems());
 					return bd;
 				})
 				.flatMap(validadorGeneral::validate)
 				.flatMap(service::modificar)
-				.flatMap(p -> ServerResponse
+				.flatMap(f -> ServerResponse
 							.ok()
 							.contentType(MediaType.APPLICATION_JSON)
-							.body(fromValue(p))
+							.body(fromValue(f))
 				)
 				.switchIfEmpty(ServerResponse.notFound().build());
 	}
@@ -110,7 +112,7 @@ public class PlatoHandler {
 		String id = req.pathVariable("id");
 		
 		return service.listarPorId(id)
-				.flatMap(p -> service.eliminar(p.getId())
+				.flatMap(f -> service.eliminar(f.getId())
 						.then(ServerResponse.noContent().build()))
 				.switchIfEmpty(ServerResponse.notFound().build());
 	}
