@@ -10,6 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@ApiModel(description = "Plato Info")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Document(collection = "platos")
 public class Plato {
@@ -17,6 +21,7 @@ public class Plato {
 	@Id
 	private String id;
 	
+	@ApiModelProperty(name = "nombre del plato")
 	@Size(min = 3)
 	@Field(name = "nombre")
 	private String nombre;
