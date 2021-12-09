@@ -29,7 +29,7 @@ import reactor.core.publisher.Mono;
 @ExtendWith(SpringExtension.class)
 @WebFluxTest(controllers = PlatoController.class, excludeAutoConfiguration = {ReactiveSecurityAutoConfiguration.class})
 @Import(PlatoServiceImpl.class)
-class PlatoControllerTests {
+class PlatoControllerTest {
 
 	@MockBean
 	private IPlatoRepo repo;
