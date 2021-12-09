@@ -72,6 +72,9 @@ public class Plato {
 		return "Plato [id=" + id + "]";
 	}
 
+	public Plato() {
+	}
+	
 	public Plato(String id, @Size(min = 3) String nombre, @NotNull @Min(1) Double precio, @NotNull Boolean estado) {
 		super();
 		this.id = id;

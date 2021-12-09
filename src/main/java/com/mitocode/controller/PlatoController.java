@@ -52,7 +52,7 @@ public class PlatoController {
 	public Mono<ResponseEntity<Flux<Plato>>> listar() {
 		
 		//service.listar().repeat(3).publishOn(Schedulers.single()).subscribe(i -> log.info(i.toString()));
-		service.listar().repeat(3).parallel().runOn(Schedulers.parallel()).subscribe(i -> log.info(i.toString()));
+		//service.listar().repeat(3).parallel().runOn(Schedulers.parallel()).subscribe(i -> log.info(i.toString()));
 		
 		Flux<Plato> fxPlatos = service.listar();
 
