@@ -67,4 +67,17 @@ public class Plato {
 		this.estado = estado;
 	}
 	
+	@Override
+	public String toString() {
+		return "Plato [id=" + id + "]";
+	}
+
+	public Plato(String id, @Size(min = 3) String nombre, @NotNull @Min(1) Double precio, @NotNull Boolean estado) {
+		super();
+		this.id = id;
+		this.nombre = nombre;
+		this.precio = precio;
+		this.estado = estado;
+	}
+	
 }

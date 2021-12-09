@@ -4,6 +4,8 @@ import java.net.URI;
 
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ import com.mitocode.service.IPlatoService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import static org.springframework.hateoas.server.reactive.WebFluxLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.reactive.WebFluxLinkBuilder.methodOn;
@@ -39,11 +42,18 @@ import static reactor.function.TupleUtils.function;
 @RequestMapping("/platos")
 public class PlatoController {
 	
+	
+	private static final Logger log = LoggerFactory.getLogger(PlatoController.class);
+	
 	@Autowired
 	private IPlatoService service;
 	
 	@GetMapping
 	public Mono<ResponseEntity<Flux<Plato>>> listar() {
+		
+		//service.listar().repeat(3).publishOn(Schedulers.single()).subscribe(i -> log.info(i.toString()));
+		service.listar().repeat(3).parallel().runOn(Schedulers.parallel()).subscribe(i -> log.info(i.toString()));
+		
 		Flux<Plato> fxPlatos = service.listar();
 
 		return Mono.just(ResponseEntity

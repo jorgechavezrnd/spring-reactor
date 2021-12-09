@@ -35,6 +35,7 @@ import com.mitocode.service.IClienteService;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import static org.springframework.hateoas.server.reactive.WebFluxLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.reactive.WebFluxLinkBuilder.methodOn;
@@ -154,6 +155,7 @@ public class ClienteController {
 		
 		return file.transferTo(f)
 				.then(service.listarPorId(id)
+						//.publishOn(Schedulers.boundedElastic())
 						.flatMap(c -> {
 							Map response;
 
